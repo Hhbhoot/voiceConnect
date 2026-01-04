@@ -17,7 +17,7 @@ import { useToast } from "@/components/ui/use-toast";
 
 const Login = () => {
   const [formData, setFormData] = useState({
-    username: "",
+    email: "",
     password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -32,12 +32,12 @@ const Login = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.username.trim() || !formData.password) return;
+    if (!formData.email.trim() || !formData.password) return;
 
     setIsLoading(true);
     try {
       const result = await authService.login(
-        formData.username.trim(),
+        formData.email.trim(),
         formData.password,
       );
 
@@ -52,7 +52,7 @@ const Login = () => {
     } catch (error: any) {
       toast({
         title: "Login failed",
-        description: error.message || "Invalid username or password.",
+        description: error.message || "Invalid email or password.",
         variant: "destructive",
       });
     } finally {
@@ -88,15 +88,15 @@ const Login = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
-              {/* Username */}
+              {/* Email */}
               <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
-                  id="username"
-                  type="text"
-                  placeholder="Enter your username"
-                  value={formData.username}
-                  onChange={(e) => handleChange("username", e.target.value)}
+                  id="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={formData.email}
+                  onChange={(e) => handleChange("email", e.target.value)}
                   className="h-12 text-base"
                   required
                 />
@@ -135,7 +135,7 @@ const Login = () => {
                 type="submit"
                 className="w-full h-12 text-base bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
                 disabled={
-                  isLoading || !formData.username.trim() || !formData.password
+                  isLoading || !formData.email.trim() || !formData.password
                 }
               >
                 {isLoading ? "Signing in..." : "Sign In"}

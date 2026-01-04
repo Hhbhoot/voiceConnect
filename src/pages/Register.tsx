@@ -24,6 +24,7 @@ import { useToast } from "@/components/ui/use-toast";
 
 const Register = () => {
   const [formData, setFormData] = useState({
+    email: "",
     username: "",
     password: "",
     confirmPassword: "",
@@ -41,6 +42,15 @@ const Register = () => {
   };
 
   const validateForm = () => {
+    if (!formData.email.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Email is required",
+        variant: "destructive",
+      });
+      return false;
+    }
+
     if (!formData.username.trim()) {
       toast({
         title: "Validation Error",
@@ -106,6 +116,7 @@ const Register = () => {
     setIsLoading(true);
     try {
       const result = await authService.register({
+        email: formData.email.trim(),
         username: formData.username.trim(),
         password: formData.password,
         gender: formData.gender,
@@ -167,6 +178,20 @@ const Register = () => {
                   placeholder="Choose a unique username"
                   value={formData.username}
                   onChange={(e) => handleChange("username", e.target.value)}
+                  className="h-12 text-base"
+                  required
+                />
+              </div>
+
+              {/* Email */}
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={formData.email}
+                  onChange={(e) => handleChange("email", e.target.value)}
                   className="h-12 text-base"
                   required
                 />

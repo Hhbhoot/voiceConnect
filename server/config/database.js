@@ -6,11 +6,7 @@ const connectDatabase = async () => {
     const mongoURI =
       process.env.MONGODB_URI || "mongodb://localhost:27017/voiceconnect";
 
-    const conn = await mongoose.connect(mongoURI, {
-      // These options are no longer needed in newer versions of mongoose but kept for compatibility
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    const conn = await mongoose.connect(mongoURI);
 
     console.log(`📄 MongoDB Connected: ${conn.connection.host}`);
     console.log(`🗄️  Database: ${conn.connection.name}`);
