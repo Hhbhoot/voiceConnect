@@ -15,15 +15,19 @@ const frontendProtocol = window.location.protocol;
 // This simplifies development setup - we can enable HTTPS later for network testing
 const backendProtocol = "http:"; // Use HTTP for development simplicity
 
+// Check for environment variable (for production/Vercel)
+const envBackendUrl = import.meta.env.VITE_BACKEND_URL;
+
 // Backend server configuration
 export const API_CONFIG = {
-  // Use HTTP backend for easier development setup
-  BASE_URL: `${backendProtocol}//${currentHost}:3001/api`,
-  SOCKET_URL: `${backendProtocol}//${currentHost}:3001`,
+  // Prioritize environment variable if it exists
+  BASE_URL: envBackendUrl
+    ? `${envBackendUrl}/api`
+    : `${backendProtocol}//${currentHost}:3001/api`,
 
-  // For production or if you want full HTTPS, use these instead:
-  // BASE_URL: `${frontendProtocol}//${currentHost}:3001/api`,
-  // SOCKET_URL: `${frontendProtocol}//${currentHost}:3001`,
+  SOCKET_URL: envBackendUrl
+    ? envBackendUrl
+    : `${backendProtocol}//${currentHost}:3001`,
 };
 
 // WebRTC configuration with better STUN/TURN servers
