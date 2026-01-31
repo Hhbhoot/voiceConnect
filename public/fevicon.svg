@@ -1,0 +1,24 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4F6EF7"/>
+      <stop offset="100%" stop-color="#9B3CF6"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Circular background -->
+  <circle cx="256" cy="256" r="240" fill="url(#grad)" />
+
+  <!-- Phone icon -->
+  <path
+    d="M337 305c-18 18-36 27-54 27-38 0-77-28-113-64s-64-75-64-113c0-18 9-36 27-54
+       10-10 23-10 33 0l33 33c10 10 10 23 0 33l-17 17
+       c-3 3-4 7-3 11 6 23 28 50 48 70s47 42 70 48c4 1 8 0 11-3l17-17
+       c10-10 23-10 33 0l33 33c10 10 10 23 0 33z"
+    fill="none"
+    stroke="#ffffff"
+    stroke-width="22"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>
