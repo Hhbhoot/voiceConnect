@@ -1,6 +1,5 @@
 import express from "express";
 import { createServer } from "http";
-import { Server } from "socket.io";
 import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
@@ -15,11 +14,7 @@ import chatRoutes from "./modules/chat/chat.routes.js";
 import conversationRoutes from "./modules/chat/conversation.routes.js";
 import callRoutes from "./modules/call/call.routes.js";
 import uploadRoutes from "./modules/upload/upload.routes.js";
-
-// Socket Handlers
-import userSocketHandler from "./modules/user/user.socket.js";
-import chatSocketHandler from "./modules/chat/chat.socket.js";
-import callSocketHandler from "./modules/call/call.socket.js";
+import { InitializeSocket } from "./socket.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,13 +24,7 @@ dotenv.config();
 
 const app = express();
 const server = createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: process.env.ALLOWED_ORIGINS?.split(",") || "*",
-    methods: ["GET", "POST"],
-    credentials: true,
-  },
-});
+const io = InitializeSocket(server);
 
 app.use(
   cors({
@@ -46,7 +35,7 @@ app.use(
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-app.use(morgan('dev'))
+app.use(morgan("dev"));
 // Serve static files (uploaded images)
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
@@ -71,17 +60,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/conversations", conversationRoutes);
 app.use("/api/calls", callRoutes);
-app.use("/api/upload", uploadRoutes); // Changed from /api/upload/image to /api/upload/image in sub-route
-
-// Socket.io connection handling
-io.on("connection", (socket) => {
-  console.log("👤 User connected:", socket.id);
-
-  // Initialize module socket handlers
-  userSocketHandler(io, socket);
-  chatSocketHandler(io, socket);
-  callSocketHandler(io, socket);
-});
+app.use("/api/upload", uploadRoutes);
 
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, "0.0.0.0", () => {

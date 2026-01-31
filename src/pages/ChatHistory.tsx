@@ -9,6 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ArrowLeft, Search, MessageCircle, Clock, Users } from "lucide-react";
 import { authService, type User } from "@/services/auth";
 import { useToast } from "@/components/ui/use-toast";
+import { useSocket } from "@/contexts/SocketContext";
 
 interface Conversation {
   _id: string;
@@ -30,6 +31,7 @@ const ChatHistory = () => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const { socket, isConnected } = useSocket();
 
   useEffect(() => {
     const user = authService.getCurrentUser();
@@ -62,6 +64,73 @@ const ChatHistory = () => {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!socket || !currentUser) return;
+
+    const handleMessage = (message: any) => {
+      console.log("Message received in ChatHistory:", message);
+      setConversations((prevConversations) =>
+        prevConversations.map((conversation) => {
+          // Identify conversation by matching the user's ID (partner ID)
+          // The senderId of the incoming message matches the partner ID if it's an incoming message
+          // The recipientId of the incoming message matches the partner ID if it's an outgoing message
+
+          if (
+            conversation._id === message.senderId ||
+            conversation._id === message.recipientId
+          ) {
+            const isIncoming = message.senderId !== currentUser.id;
+            return {
+              ...conversation,
+              lastMessage: {
+                _id: message.id,
+                content:
+                  message.type === "image"
+                    ? "📷 Photo"
+                    : message.type === "voice"
+                      ? "🎤 Voice Message"
+                      : message.content,
+                createdAt: message.timestamp,
+                sender: message.senderId,
+                type: message.type,
+              },
+              unreadCount: isIncoming
+                ? (conversation.unreadCount || 0) + 1
+                : conversation.unreadCount,
+            };
+          }
+          return conversation;
+        }),
+      );
+    };
+
+    const handleMessagesRead = (data: {
+      conversationId: string;
+      userId: string;
+    }) => {
+      console.log("Messages read event:", data);
+      // Only clear unread count if WE (currentUser) read the messages
+      if (data.userId === currentUser.id) {
+        setConversations((prev) =>
+          prev.map((c) => {
+            if (c._id === data.conversationId) {
+              return { ...c, unreadCount: 0 };
+            }
+            return c;
+          }),
+        );
+      }
+    };
+
+    socket.on("message", handleMessage);
+    socket.on("messages-read", handleMessagesRead);
+
+    return () => {
+      socket.off("message", handleMessage);
+      socket.off("messages-read", handleMessagesRead);
+    };
+  }, [socket, currentUser]);
 
   const handleStartChat = (user: User) => {
     // Navigate to chat with proper user data

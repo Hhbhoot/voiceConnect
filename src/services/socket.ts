@@ -8,10 +8,7 @@ class SocketService {
 
   connect(userData: { id: string; username: string; avatar: string }) {
     // Don't create new connection if already connecting/connected
-    if (
-      this.isConnecting ||
-      (this.socket && (this.socket.connected || this.socket.connecting))
-    ) {
+    if (this.isConnecting || (this.socket && this.socket.connected)) {
       console.log("🔄 Socket already exists and is connected/connecting");
       return this.socket!;
     }
@@ -30,6 +27,14 @@ class SocketService {
       transports: ["websocket", "polling"], // Allow both transports
       timeout: 20000, // 20 second timeout
       forceNew: true, // Force new connection
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      withCredentials: true,
+      auth: {
+        token: localStorage.getItem("token"),
+      },
     });
 
     this.socket.on("connect", () => {

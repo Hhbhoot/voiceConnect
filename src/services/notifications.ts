@@ -53,11 +53,12 @@ export class NotificationService {
   }
 
   // Chat message notifications
-  showChatMessageNotification(
+  async showChatMessageNotification(
     senderName: string,
     message: string,
     senderAvatar?: string,
     chatId?: string,
+    currentUserId?: string,
   ) {
     // Only show notification if page is not visible or user is not in the specific chat
     if (
@@ -65,9 +66,8 @@ export class NotificationService {
       (document.visibilityState === "hidden" ||
         this.shouldShowChatNotification(chatId))
     ) {
-      const notificationId = `chat-${senderName}-${Date.now()}`;
-
-      const notification = new Notification(`💬 ${senderName}`, {
+      const title = `💬 ${senderName}`;
+      const options = {
         body: this.truncateMessage(message),
         icon: senderAvatar || "/placeholder.svg",
         tag: `chat-${senderName}`, // Replaces previous notifications from same sender
@@ -78,34 +78,33 @@ export class NotificationService {
           senderId: chatId,
           senderName,
           timestamp: Date.now(),
+          token: localStorage.getItem("token"),
+          userId: currentUserId, // We need to add this argument to the function
+          apiUrl:
+            import.meta.env.VITE_API_BASE_URL || "http://localhost:3001/api", // Or use API_CONFIG if imported
         },
         actions: [
           { action: "reply", title: "Reply" },
           { action: "mark_read", title: "Mark as Read" },
         ],
-      });
+      } as any;
 
-      // Store notification reference
-      this.activeNotifications.set(notificationId, notification);
-
-      // Auto-close after 5 seconds for chat messages
-      setTimeout(() => {
-        notification.close();
-        this.activeNotifications.delete(notificationId);
-      }, 5000);
-
-      // Handle notification clicks
-      notification.onclick = () => {
-        window.focus();
-        // Navigate to chat if possible
-        if (chatId) {
-          this.navigateToChat(chatId, senderName);
+      if ("serviceWorker" in navigator) {
+        try {
+          const registration = await navigator.serviceWorker.ready;
+          await registration.showNotification(title, options);
+          return null; // showNotification returns void promise
+        } catch (error) {
+          console.error("Error showing SW notification:", error);
+          // Fallback to standard notification without actions
+          const { actions, ...fallbackOptions } = options;
+          return new Notification(title, fallbackOptions);
         }
-        notification.close();
-        this.activeNotifications.delete(notificationId);
-      };
-
-      return notification;
+      } else {
+        // Fallback for browsers without SW support
+        const { actions, ...fallbackOptions } = options;
+        return new Notification(title, fallbackOptions);
+      }
     }
     return null;
   }
@@ -142,33 +141,51 @@ export class NotificationService {
   }
 
   // Incoming call notifications (existing)
-  showIncomingCallNotification(callerName: string, callerAvatar?: string) {
+  async showIncomingCallNotification(
+    callerName: string,
+    callerAvatar?: string,
+  ) {
     if (this.permission === "granted") {
-      const notification = new Notification(
-        `📞 Incoming call from ${callerName}`,
-        {
-          body: "Click to answer the call",
-          icon: callerAvatar || "/placeholder.svg",
-          tag: "voiceconnect-incoming-call",
-          requireInteraction: true,
-          actions: [
-            { action: "answer", title: "Answer" },
-            { action: "decline", title: "Decline" },
-          ],
-          data: {
-            type: "call",
-            callerName,
-            timestamp: Date.now(),
-          },
+      const title = `📞 Incoming call from ${callerName}`;
+      const options = {
+        body: "Click to answer the call",
+        icon: callerAvatar || "/placeholder.svg",
+        tag: "voiceconnect-incoming-call",
+        requireInteraction: true,
+        data: {
+          type: "call",
+          callerName,
+          timestamp: Date.now(),
         },
-      );
+        actions: [
+          { action: "answer", title: "Answer" },
+          { action: "decline", title: "Decline" },
+        ],
+      } as any;
 
-      // Auto-close after 30 seconds
-      setTimeout(() => {
-        notification.close();
-      }, 30000);
-
-      return notification;
+      if ("serviceWorker" in navigator) {
+        try {
+          const registration = await navigator.serviceWorker.ready;
+          await registration.showNotification(title, options);
+          return null;
+        } catch (error) {
+          console.error("Error showing SW call notification:", error);
+          const { actions, ...fallbackOptions } = options;
+          const notification = new Notification(title, fallbackOptions);
+          // Auto-close after 30 seconds
+          setTimeout(() => {
+            notification.close();
+          }, 30000);
+          return notification;
+        }
+      } else {
+        const { actions, ...fallbackOptions } = options;
+        const notification = new Notification(title, fallbackOptions);
+        setTimeout(() => {
+          notification.close();
+        }, 30000);
+        return notification;
+      }
     }
     return null;
   }

@@ -15,7 +15,9 @@ import {
   Plus,
 } from "lucide-react";
 import { authService, type User } from "@/services/auth";
-import { useSocket } from "@/contexts/SocketContext";
+import { useSocket } from "@/contexts/SocketContext"; // Check if this import is correct based on prev files
+import { chatService } from "@/services/chat";
+import { useLocation } from "react-router-dom";
 
 interface ChatPreview {
   user: User;
@@ -31,10 +33,11 @@ interface ChatPreview {
 const ChatList = () => {
   const navigate = useNavigate();
   const { socket } = useSocket();
-  const [chats, setChats] = useState<ChatPreview[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
+  const location = useLocation(); // Added this
+  const [conversations, setConversations] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const user = authService.getCurrentUser();
@@ -43,34 +46,106 @@ const ChatList = () => {
       return;
     }
     setCurrentUser(user);
-    loadUsers();
+    loadConversations();
   }, [navigate]);
 
-  const loadUsers = async () => {
-    try {
-      const userList = await authService.getUsers();
-      const currentUserId = authService.getCurrentUser()?.id;
-      const filteredUsers = userList.filter((u) => u.id !== currentUserId);
-      setUsers(filteredUsers);
+  useEffect(() => {
+    if (!socket || !currentUser) return;
 
-      // Create chat previews for all users (in a real app, you'd only show users you've chatted with)
-      const chatPreviews: ChatPreview[] = filteredUsers.map((user) => ({
-        user,
-        lastMessage: undefined,
-        unreadCount: 0,
-        isOnline: user.isOnline,
-      }));
-      setChats(chatPreviews);
+    const handleNewMessage = (message: any) => {
+      console.log("ChatList: Received new message event", message);
+      setConversations((prevModels) => {
+        const senderId = message.senderId;
+        const recipientId = message.recipientId;
+
+        // Try to find conversation by the partner's ID
+        // In our backend aggregation, the root `_id` of the conversation object IS the partner's ID
+        const conversationIndex = prevModels.findIndex((c) => {
+          const partnerId = c._id;
+          return partnerId === senderId || partnerId === recipientId;
+        });
+
+        if (conversationIndex === -1) {
+          console.log(
+            "ChatList: Conversation not found for (sender/recipient)",
+            senderId,
+            recipientId,
+            "reloading silently...",
+          );
+          // New conversation starter!
+          loadConversations(true);
+          return prevModels;
+        }
+
+        console.log(
+          "ChatList: Updating conversation at index",
+          conversationIndex,
+        );
+        const updatedConversation = { ...prevModels[conversationIndex] };
+
+        updatedConversation.lastMessage = {
+          content:
+            message.type === "image"
+              ? "📷 Image"
+              : message.type === "voice"
+                ? "🎤 Voice Message"
+                : message.content,
+          createdAt: message.timestamp,
+        };
+
+        // Update unread count if it's incoming (sender is not us)
+        if (senderId !== currentUser.id) {
+          updatedConversation.unreadCount =
+            (updatedConversation.unreadCount || 0) + 1;
+        }
+
+        const newConversations = [...prevModels];
+        newConversations.splice(conversationIndex, 1);
+        newConversations.unshift(updatedConversation);
+        return newConversations;
+      });
+    };
+
+    socket.on("message", handleNewMessage);
+
+    return () => {
+      socket.off("message", handleNewMessage);
+    };
+  }, [socket, currentUser]);
+
+  // Refresh list when navigating back (in case we read messages)
+  useEffect(() => {
+    if (currentUser) {
+      loadConversations();
+    }
+  }, [location.pathname, currentUser]);
+
+  const loadConversations = async (silent = false) => {
+    try {
+      if (!silent) setLoading(true);
+      const data = await chatService.getConversations();
+      setConversations(data);
     } catch (error) {
-      console.error("Failed to load users:", error);
+      console.error("Failed to load conversations:", error);
+    } finally {
+      if (!silent) setLoading(false);
     }
   };
 
-  const startChat = (user: User) => {
-    navigate("/chat", { state: { chatUser: user } });
+  const startChat = (conversation: any) => {
+    // Map conversation user to User type
+    const userToChat = {
+      id: conversation.user.id || conversation.user._id,
+      username: conversation.user.username,
+      avatar: conversation.user.avatar,
+      isOnline: conversation.user.isOnline,
+      email: conversation.user.email || "", // fallback
+    };
+    navigate("/chat", { state: { chatUser: userToChat } });
   };
 
   const formatTime = (timestamp: string) => {
+    if (!timestamp) return "";
     const date = new Date(timestamp);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
@@ -89,8 +164,8 @@ const ChatList = () => {
     }
   };
 
-  const filteredChats = chats.filter((chat) =>
-    chat.user.username.toLowerCase().includes(searchQuery.toLowerCase()),
+  const filteredChats = conversations.filter((chat) =>
+    chat.user?.username?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (
@@ -149,7 +224,11 @@ const ChatList = () => {
             {/* Chat List */}
             <ScrollArea className="h-[500px]">
               <div className="space-y-2">
-                {filteredChats.length === 0 ? (
+                {loading ? (
+                  <div className="text-center py-12 text-gray-400">
+                    Loading...
+                  </div>
+                ) : filteredChats.length === 0 ? (
                   <div className="text-center py-12">
                     <MessageCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -166,8 +245,8 @@ const ChatList = () => {
                 ) : (
                   filteredChats.map((chat) => (
                     <div
-                      key={chat.user.id}
-                      onClick={() => startChat(chat.user)}
+                      key={chat._id || chat.user.id}
+                      onClick={() => startChat(chat)}
                       className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
                     >
                       <div className="flex items-center space-x-3 flex-1">
@@ -175,12 +254,14 @@ const ChatList = () => {
                           <Avatar className="w-12 h-12">
                             <AvatarImage src={chat.user.avatar} />
                             <AvatarFallback>
-                              {chat.user.username[0].toUpperCase()}
+                              {chat.user.username?.[0]?.toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
                           <div
                             className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
-                              chat.isOnline ? "bg-green-500" : "bg-gray-400"
+                              chat.user.isOnline
+                                ? "bg-green-500"
+                                : "bg-gray-400"
                             }`}
                           />
                         </div>
@@ -191,7 +272,10 @@ const ChatList = () => {
                             </h3>
                             {chat.lastMessage && (
                               <span className="text-xs text-gray-500">
-                                {formatTime(chat.lastMessage.timestamp)}
+                                {formatTime(
+                                  chat.lastMessage.createdAt ||
+                                    chat.lastMessage.timestamp,
+                                )}
                               </span>
                             )}
                           </div>
@@ -222,7 +306,7 @@ const ChatList = () => {
                               },
                             });
                           }}
-                          disabled={!chat.isOnline}
+                          disabled={!chat.user.isOnline}
                         >
                           <Phone className="w-4 h-4" />
                         </Button>

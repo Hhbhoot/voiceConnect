@@ -3,7 +3,9 @@ import { useSocket } from "./SocketContext";
 import { authService, type User } from "@/services/auth";
 import { notificationService } from "@/services/notifications";
 import { useToast } from "@/components/ui/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 import { useLocation } from "react-router-dom";
+import { chatService } from "@/services/chat";
 
 interface ChatNotificationContextType {
   unreadCount: number;
@@ -119,6 +121,7 @@ export const ChatNotificationProvider: React.FC<
             messageData.content,
             `https://api.dicebear.com/7.x/avataaars/svg?seed=${messageData.senderName}`,
             messageData.senderId,
+            currentUser?.id,
           );
 
           // Show toast notification if app is visible but not in the specific chat
@@ -133,7 +136,29 @@ export const ChatNotificationProvider: React.FC<
                     : messageData.content.length > 50
                       ? messageData.content.substring(0, 50) + "..."
                       : messageData.content,
-              duration: 3000,
+              duration: 5000,
+              action: (
+                <ToastAction
+                  altText="Mark as Read"
+                  onClick={async () => {
+                    if (currentUser) {
+                      // Call backend to mark as read
+                      await chatService.markAsRead(messageData.senderId);
+                      // Update local state
+                      markAsRead(messageData.senderId);
+                      // Emit socket event for real-time update if connected
+                      if (socket) {
+                        socket.emit("mark-messages-read", {
+                          senderId: messageData.senderId,
+                          recipientId: currentUser.id,
+                        });
+                      }
+                    }
+                  }}
+                >
+                  Mark as Read
+                </ToastAction>
+              ),
             });
           }
         } else {

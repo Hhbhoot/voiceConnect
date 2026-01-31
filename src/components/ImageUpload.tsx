@@ -17,7 +17,7 @@ import { useToast } from "@/components/ui/use-toast";
 interface ImageUploadProps {
   isOpen: boolean;
   onClose: () => void;
-  onImageSend: (imageUrl: string, caption?: string) => void;
+  onImageSend: (imageUrl: string, publicId: string, caption?: string) => void;
 }
 
 const ImageUpload: React.FC<ImageUploadProps> = ({
@@ -51,11 +51,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     }
   };
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-
-    if (!file) return;
-
+  const processFile = (file: File) => {
     // Validate file type
     if (!file.type.startsWith("image/")) {
       toast({
@@ -86,6 +82,13 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     reader.readAsDataURL(file);
   };
 
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      processFile(file);
+    }
+  };
+
   const handleUpload = async () => {
     if (!selectedFile) return;
 
@@ -112,6 +115,9 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
       const response = await fetch(`${API_URL}/api/upload/image`, {
         method: "POST",
         body: formData,
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
       });
 
       clearInterval(progressInterval);
@@ -122,10 +128,14 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
       }
 
       const result = await response.json();
-
+      console.log("Upload result:", result);
       if (result.success) {
         // Send the image message
-        onImageSend(result.imageUrl, caption.trim() || undefined);
+        onImageSend(
+          result.imageUrl,
+          result.publicId,
+          caption.trim() || undefined,
+        );
 
         toast({
           title: "Image uploaded",
@@ -163,11 +173,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     const imageFile = files.find((file) => file.type.startsWith("image/"));
 
     if (imageFile) {
-      // Create a fake event to reuse handleFileSelect logic
-      const fakeEvent = {
-        target: { files: [imageFile] },
-      } as React.ChangeEvent<HTMLInputElement>;
-      handleFileSelect(fakeEvent);
+      processFile(imageFile);
     }
   };
 

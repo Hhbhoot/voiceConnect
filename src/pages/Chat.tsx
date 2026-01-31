@@ -27,6 +27,7 @@ import ChatImage from "@/components/ChatImage";
 import EmojiPicker from "@/components/EmojiPicker";
 import VoiceRecorder from "@/components/VoiceRecorder";
 import VoiceMessage from "@/components/VoiceMessage";
+import { chatService } from "@/services/chat";
 
 interface Message {
   id: string;
@@ -114,6 +115,11 @@ const Chat = () => {
           recipientId: currentUser.id,
         });
 
+        // Also call the API for persistence
+        chatService
+          .markAsRead(chatUser.id)
+          .catch((err) => console.error("Failed to mark as read:", err));
+
         chatRoomJoinedRef.current = true;
       }
 
@@ -127,6 +133,15 @@ const Chat = () => {
 
       return () => {
         console.log("🧹 Cleaning up chat socket listeners");
+
+        // Leave the chat room
+        if (socket && currentUser && chatUser) {
+          socket.emit("leave-chat", {
+            userId: currentUser.id,
+            chatPartnerId: chatUser.id,
+          });
+        }
+
         socket.off("message", handleNewMessage);
         socket.off("chat-history", handleChatHistory);
         socket.off("typing", handleTyping);
@@ -281,7 +296,7 @@ const Chat = () => {
     stopTyping();
   };
 
-  const sendImage = (imageUrl: string, caption?: string) => {
+  const sendImage = (imageUrl: string, publicId: string, caption?: string) => {
     if (!socket || !currentUser || !chatUser || !isConnected) {
       console.log("❌ Cannot send image - missing requirements");
       return;
@@ -291,6 +306,7 @@ const Chat = () => {
       content: caption || "📸 Image",
       type: "image",
       imageUrl,
+      publicId,
       caption,
     };
 
@@ -320,6 +336,9 @@ const Chat = () => {
       const response = await fetch(`${API_URL}/api/upload/audio`, {
         method: "POST",
         body: formData,
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
       });
 
       if (!response.ok) {

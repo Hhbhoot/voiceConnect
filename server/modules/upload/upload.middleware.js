@@ -7,56 +7,54 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Define uploads directory relative to this file (modules/upload/ -> ../../uploads)
-const uploadsDir = path.join(__dirname, "../../uploads");
+import os from "os";
 
-// Create uploads directory if it doesn't exist
-if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true });
-}
+// Define uploads directory relative to this file (modules/upload/ -> ../../uploads)
+const tempDir = os.tmpdir();
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, uploadsDir);
-    },
-    filename: (req, file, cb) => {
-        // Generate unique filename
-        const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-        cb(
-            null,
-            file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname),
-        );
-    },
+  destination: (req, file, cb) => {
+    cb(null, tempDir);
+  },
+  filename: (req, file, cb) => {
+    // Generate unique filename
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(
+      null,
+      file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname),
+    );
+  },
 });
 
 const fileFilter = (req, file, cb) => {
-    // Allow only image files
-    if (file.mimetype.startsWith("image/")) {
-        cb(null, true);
-    } else {
-        cb(new Error("Only image files are allowed!"), false);
-    }
+  // Allow only image files
+  if (file.mimetype.startsWith("image/")) {
+    cb(null, true);
+  } else {
+    cb(new Error("Only image files are allowed!"), false);
+  }
 };
 
 export const uploadImage = multer({
-    storage: storage,
-    fileFilter: fileFilter,
-    limits: {
-        fileSize: 5 * 1024 * 1024, // 5MB limit
-    },
+  storage: storage,
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
 });
 
 export const uploadAudio = multer({
-    storage: storage,
-    fileFilter: (req, file, cb) => {
-        // Allow only audio files
-        if (file.mimetype.startsWith("audio/")) {
-            cb(null, true);
-        } else {
-            cb(new Error("Only audio files are allowed!"), false);
-        }
-    },
-    limits: {
-        fileSize: 10 * 1024 * 1024, // 10MB limit for audio
-    },
+  storage: storage,
+  fileFilter: (req, file, cb) => {
+    // Allow only audio files
+    if (file.mimetype.startsWith("audio/")) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only audio files are allowed!"), false);
+    }
+  },
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit for audio
+  },
 });
