@@ -230,7 +230,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
             <div className="text-center space-y-4">
               {/* Recording Indicator */}
               <div
-                className={`w-24 h-24 mx-auto rounded-full flex items-center justify-center transition-all duration-300 ${
+                className={`w-16 h-16 sm:w-24 sm:h-24 mx-auto rounded-full flex items-center justify-center transition-all duration-300 ${
                   isRecording
                     ? isPaused
                       ? "bg-yellow-100 border-4 border-yellow-500"
@@ -239,7 +239,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
                 }`}
               >
                 <Mic
-                  className={`w-8 h-8 ${
+                  className={`w-6 h-6 sm:w-8 sm:h-8 ${
                     isRecording
                       ? isPaused
                         ? "text-yellow-600"

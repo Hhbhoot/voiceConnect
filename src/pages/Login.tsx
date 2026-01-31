@@ -61,17 +61,17 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center p-4 sm:p-6 lg:p-8">
+      <div className="w-full max-w-md space-y-8">
         {/* Logo/Brand Section */}
-        <div className="text-center mb-8">
-          <div className="mx-auto w-16 h-16 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center mb-4">
-            <Phone className="w-8 h-8 text-white" />
+        <div className="text-center">
+          <div className="mx-auto w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center mb-4">
+            <Phone className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
             VoiceConnect
           </h1>
-          <p className="text-gray-600">
+          <p className="text-sm sm:text-base text-gray-600">
             Crystal clear voice & video calls, anywhere
           </p>
         </div>
@@ -97,7 +97,7 @@ const Login = () => {
                   placeholder="Enter your email"
                   value={formData.email}
                   onChange={(e) => handleChange("email", e.target.value)}
-                  className="h-12 text-base"
+                  className="h-10 sm:h-12 text-base"
                   required
                 />
               </div>
@@ -112,7 +112,7 @@ const Login = () => {
                     placeholder="Enter your password"
                     value={formData.password}
                     onChange={(e) => handleChange("password", e.target.value)}
-                    className="h-12 text-base pr-10"
+                    className="h-10 sm:h-12 text-base pr-10"
                     required
                   />
                   <Button
@@ -133,7 +133,7 @@ const Login = () => {
 
               <Button
                 type="submit"
-                className="w-full h-12 text-base bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+                className="w-full h-10 sm:h-12 text-base bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 transition-all duration-200"
                 disabled={
                   isLoading || !formData.email.trim() || !formData.password
                 }
@@ -159,22 +159,22 @@ const Login = () => {
         </Card>
 
         {/* Features */}
-        <div className="mt-8 grid grid-cols-3 gap-4 text-center">
-          <div className="flex flex-col items-center space-y-2">
-            <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
-              <Mic className="w-5 h-5 text-indigo-600" />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+          <div className="flex flex-row sm:flex-col items-center justify-center sm:space-y-2 space-x-3 sm:space-x-0 bg-white/50 sm:bg-transparent p-3 sm:p-0 rounded-lg">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+              <Mic className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" />
             </div>
             <span className="text-sm text-gray-600">HD Audio</span>
           </div>
-          <div className="flex flex-col items-center space-y-2">
-            <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-              <Users className="w-5 h-5 text-purple-600" />
+          <div className="flex flex-row sm:flex-col items-center justify-center sm:space-y-2 space-x-3 sm:space-x-0 bg-white/50 sm:bg-transparent p-3 sm:p-0 rounded-lg">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-100 rounded-full flex items-center justify-center">
+              <Users className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
             </div>
             <span className="text-sm text-gray-600">Video Calls</span>
           </div>
-          <div className="flex flex-col items-center space-y-2">
-            <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-              <Phone className="w-5 h-5 text-green-600" />
+          <div className="flex flex-row sm:flex-col items-center justify-center sm:space-y-2 space-x-3 sm:space-x-0 bg-white/50 sm:bg-transparent p-3 sm:p-0 rounded-lg">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 rounded-full flex items-center justify-center">
+              <Phone className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
             </div>
             <span className="text-sm text-gray-600">Instant Connect</span>
           </div>

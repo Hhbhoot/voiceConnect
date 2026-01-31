@@ -18,6 +18,8 @@ interface IncomingCallModalProps {
   onDecline: () => void;
 }
 
+import { authService, type User } from "@/services/auth";
+
 const IncomingCallModal = ({
   isOpen,
   caller,
@@ -100,7 +102,7 @@ const IncomingCallModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={() => {}} modal>
-      <DialogContent className="sm:max-w-md" hideCloseButton>
+      <DialogContent className="sm:max-w-md [&>button]:hidden">
         <DialogHeader className="text-center pb-6">
           <DialogTitle className="text-2xl font-bold">
             Incoming Call
@@ -123,9 +125,9 @@ const IncomingCallModal = ({
                 isRinging ? "animate-pulse" : ""
               } bg-green-300 opacity-50`}
             />
-            <Avatar className="relative w-32 h-32 ring-4 ring-green-200">
+            <Avatar className="relative w-24 h-24 sm:w-32 sm:h-32 ring-4 ring-green-200">
               <AvatarImage src={caller.avatar} />
-              <AvatarFallback className="text-4xl bg-gradient-to-r from-green-500 to-emerald-500 text-white">
+              <AvatarFallback className="text-3xl sm:text-4xl bg-gradient-to-r from-green-500 to-emerald-500 text-white">
                 {caller.username[0].toUpperCase()}
               </AvatarFallback>
             </Avatar>
@@ -133,10 +135,10 @@ const IncomingCallModal = ({
 
           {/* Caller Info */}
           <div className="text-center">
-            <h3 className="text-xl font-semibold text-gray-900">
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900">
               {caller.username}
             </h3>
-            <p className="text-gray-500 flex items-center justify-center mt-2">
+            <p className="text-gray-500 flex items-center justify-center mt-2 text-sm sm:text-base">
               {isVideoCall ? (
                 <>
                   <Video className="w-4 h-4 mr-2" />
@@ -152,24 +154,24 @@ const IncomingCallModal = ({
           </div>
 
           {/* Call Actions */}
-          <div className="flex items-center space-x-8 pt-4">
+          <div className="flex items-center space-x-6 sm:space-x-8 pt-4">
             {/* Decline Button */}
             <Button
               onClick={onDecline}
               variant="destructive"
               size="lg"
-              className="w-16 h-16 rounded-full bg-red-500 hover:bg-red-600 active:scale-95 transition-transform"
+              className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-red-500 hover:bg-red-600 active:scale-95 transition-transform"
             >
-              <PhoneOff className="w-8 h-8" />
+              <PhoneOff className="w-6 h-6 sm:w-8 sm:h-8" />
             </Button>
 
             {/* Accept Button */}
             <Button
               onClick={onAccept}
               size="lg"
-              className="w-16 h-16 rounded-full bg-green-500 hover:bg-green-600 active:scale-95 transition-transform animate-pulse"
+              className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-green-500 hover:bg-green-600 active:scale-95 transition-transform animate-pulse"
             >
-              <Phone className="w-8 h-8" />
+              <Phone className="w-6 h-6 sm:w-8 sm:h-8" />
             </Button>
           </div>
 

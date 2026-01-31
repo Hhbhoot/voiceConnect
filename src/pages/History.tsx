@@ -352,11 +352,11 @@ const History = () => {
                     return (
                       <div
                         key={call.id}
-                        className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors group"
+                        className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors group gap-4 sm:gap-0"
                       >
-                        <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-4 w-full sm:w-auto">
                           <div className="relative">
-                            <Avatar className="w-12 h-12">
+                            <Avatar className="w-10 h-10 sm:w-12 sm:h-12">
                               <AvatarImage src={otherParticipant.avatar} />
                               <AvatarFallback>
                                 {(otherParticipant.username ||
@@ -364,9 +364,9 @@ const History = () => {
                               </AvatarFallback>
                             </Avatar>
                             <div
-                              className={`absolute -bottom-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center ${getCallTypeColor(call)}`}
+                              className={`absolute -bottom-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-white rounded-full flex items-center justify-center ${getCallTypeColor(call)}`}
                             >
-                              <CallIcon className="w-3 h-3" />
+                              <CallIcon className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                             </div>
                           </div>
                           <div className="flex-1">
@@ -381,13 +381,13 @@ const History = () => {
                                 </Badge>
                               )}
                             </div>
-                            <div className="flex items-center space-x-4 text-sm text-gray-500">
+                            <div className="flex flex-wrap items-center gap-x-2 sm:space-x-4 text-xs sm:text-sm text-gray-500">
                               <span>{formatDate(call.createdAt)}</span>
-                              <span>•</span>
+                              <span className="hidden sm:inline">•</span>
                               <span>{getCallStatusText(call)}</span>
                               {call.duration > 0 && (
                                 <>
-                                  <span>•</span>
+                                  <span className="hidden sm:inline">•</span>
                                   <span>{formatDuration(call.duration)}</span>
                                 </>
                               )}
@@ -395,7 +395,7 @@ const History = () => {
                           </div>
                         </div>
 
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center justify-between w-full sm:w-auto sm:space-x-2">
                           <Badge
                             variant={
                               call.status === "missed" ||
@@ -411,9 +411,9 @@ const History = () => {
                             {getCallStatusText(call)}
                           </Badge>
 
-                          {/* Quick action buttons - shown on hover */}
+                          {/* Quick action buttons - visible on mobile, hover on desktop */}
                           {otherParticipant.id !== "unknown" && (
-                            <div className="opacity-0 group-hover:opacity-100 transition-opacity flex space-x-1">
+                            <div className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex space-x-1">
                               <Button
                                 variant="ghost"
                                 size="sm"

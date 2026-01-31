@@ -72,13 +72,6 @@ export default (io, socket) => {
   socket.on("end-call", async (data) => {
     try {
       const { targetUserId, duration } = data;
-      const targetSocketId = activeUsers.get(targetUserId);
-
-      if (targetSocketId) {
-        io.to(targetSocketId).emit("call-ended");
-      }
-
-      console.log(`📴 Call ended: ${duration}s`);
 
       // Update call record
       const call = await Call.findOne({
@@ -90,6 +83,13 @@ export default (io, socket) => {
       }).sort({ createdAt: -1 });
 
       if (call) {
+        // Only emit to target if call was found and active
+        const targetSocketId = activeUsers.get(targetUserId);
+        if (targetSocketId) {
+          io.to(targetSocketId).emit("call-ended");
+        }
+
+        console.log(`📴 Call ended: ${duration}s`);
         await call.markAsEnded(duration);
 
         // Update user call count
@@ -100,6 +100,8 @@ export default (io, socket) => {
 
         if (caller) await caller.updateActivity("call");
         if (recipient) await recipient.updateActivity("call");
+      } else {
+        console.log("Call already ended or not found, ignoring end-call event");
       }
     } catch (error) {
       console.error("End call error:", error);

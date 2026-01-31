@@ -57,6 +57,7 @@ const Call = () => {
   const remoteAudioRef = useRef<HTMLAudioElement>(null);
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
+  const callEndedRef = useRef(false);
 
   useEffect(() => {
     const user = authService.getCurrentUser();
@@ -77,12 +78,34 @@ const Call = () => {
     }
 
     return () => {
-      endCall();
+      // Cleanup listeners
+      if (socket) {
+        socket.off("call-answered", handleCallAnswered);
+        socket.off("call-ended", handleCallEnded);
+        socket.off("call-rejected", handleCallRejected);
+        socket.off("ice-candidate", handleIceCandidate);
+      }
+
+      // End call if not already ended (e.g. user closed tab or pressed back)
+      if (!callEndedRef.current) {
+        endCall(true);
+      }
+
       if (durationInterval.current) {
         clearInterval(durationInterval.current);
       }
     };
-  }, []);
+  }, [socket]);
+
+  // Re-attach local stream when video is toggled on or camera is switched
+  useEffect(() => {
+    if (isVideoCall && isVideoOn && localVideoRef.current) {
+      const stream = webrtcService.getCurrentLocalStream();
+      if (stream) {
+        localVideoRef.current.srcObject = stream;
+      }
+    }
+  }, [isVideoOn, isVideoCall]);
 
   const initializeCall = async () => {
     try {
@@ -109,6 +132,8 @@ const Call = () => {
             isVideoCall,
           });
         }
+        setCallStatus("connected");
+        attachRemoteStream();
       } else {
         // Make outgoing call
         const offer = await webrtcService.createOffer();
@@ -138,32 +163,34 @@ const Call = () => {
     }
   };
 
+  const attachRemoteStream = () => {
+    const remoteStream = webrtcService.getRemoteStream();
+    if (remoteStream) {
+      if (remoteAudioRef.current && !isVideoCall) {
+        remoteAudioRef.current.srcObject = remoteStream;
+      }
+      if (isVideoCall && remoteVideoRef.current) {
+        remoteVideoRef.current.srcObject = remoteStream;
+      }
+    }
+  };
+
   const handleCallAnswered = async (data: {
     answer: RTCSessionDescriptionInit;
   }) => {
     try {
       await webrtcService.handleAnswer(data.answer);
       setCallStatus("connected");
-
-      // Setup remote media
-      const remoteStream = webrtcService.getRemoteStream();
-      if (remoteStream) {
-        if (remoteAudioRef.current) {
-          remoteAudioRef.current.srcObject = remoteStream;
-        }
-        if (isVideoCall && remoteVideoRef.current) {
-          remoteVideoRef.current.srcObject = remoteStream;
-        }
-      }
+      attachRemoteStream();
     } catch (error) {
       console.error("Error handling answer:", error);
     }
   };
 
   const handleCallEnded = () => {
+    console.log("Remote ended call");
     setCallStatus("ended");
-    endCall();
-    navigate("/dashboard");
+    endCall(false); // Don't notify server as they already know
   };
 
   const handleCallRejected = () => {
@@ -219,8 +246,11 @@ const Call = () => {
     setIsFullscreen(!isFullscreen);
   };
 
-  const endCall = () => {
-    if (callStartTime.current && socket) {
+  const endCall = (notifyServer = true) => {
+    if (callEndedRef.current) return;
+    callEndedRef.current = true;
+
+    if (notifyServer && callStartTime.current && socket) {
       const duration = Math.floor((Date.now() - callStartTime.current) / 1000);
       socket.emit("end-call", { targetUserId: targetUser.id, duration });
     }
@@ -231,6 +261,7 @@ const Call = () => {
       clearInterval(durationInterval.current);
     }
 
+    // Only navigate if we're still mounted (this might set state on unmounted component if not careful, but navigate handles it)
     navigate("/dashboard");
   };
 
@@ -341,18 +372,18 @@ const Call = () => {
             </div>
 
             {/* Video Call Controls */}
-            <div className="flex justify-center space-x-4">
+            <div className="flex justify-center space-x-2 sm:space-x-4">
               {/* Video Toggle */}
               <Button
                 onClick={toggleVideo}
                 variant={isVideoOn ? "secondary" : "destructive"}
                 size="lg"
-                className="w-14 h-14 rounded-full"
+                className="w-10 h-10 sm:w-14 sm:h-14 rounded-full p-0"
               >
                 {isVideoOn ? (
-                  <Video className="w-6 h-6" />
+                  <Video className="w-5 h-5 sm:w-6 sm:h-6" />
                 ) : (
-                  <VideoOff className="w-6 h-6" />
+                  <VideoOff className="w-5 h-5 sm:w-6 sm:h-6" />
                 )}
               </Button>
 
@@ -361,23 +392,23 @@ const Call = () => {
                 onClick={toggleMute}
                 variant={isMuted ? "destructive" : "secondary"}
                 size="lg"
-                className="w-14 h-14 rounded-full"
+                className="w-10 h-10 sm:w-14 sm:h-14 rounded-full p-0"
               >
                 {isMuted ? (
-                  <MicOff className="w-6 h-6" />
+                  <MicOff className="w-5 h-5 sm:w-6 sm:h-6" />
                 ) : (
-                  <Mic className="w-6 h-6" />
+                  <Mic className="w-5 h-5 sm:w-6 sm:h-6" />
                 )}
               </Button>
 
               {/* End Call Button */}
               <Button
-                onClick={endCall}
+                onClick={() => endCall()}
                 variant="destructive"
                 size="lg"
-                className="w-16 h-16 rounded-full bg-red-500 hover:bg-red-600"
+                className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-red-500 hover:bg-red-600 p-0"
               >
-                <PhoneOff className="w-8 h-8" />
+                <PhoneOff className="w-6 h-6 sm:w-8 sm:h-8" />
               </Button>
 
               {/* Switch Camera */}
@@ -385,9 +416,9 @@ const Call = () => {
                 onClick={switchCamera}
                 variant="secondary"
                 size="lg"
-                className="w-14 h-14 rounded-full"
+                className="w-10 h-10 sm:w-14 sm:h-14 rounded-full p-0"
               >
-                <RotateCcw className="w-6 h-6" />
+                <RotateCcw className="w-5 h-5 sm:w-6 sm:h-6" />
               </Button>
 
               {/* Speaker Button */}
@@ -395,12 +426,12 @@ const Call = () => {
                 onClick={toggleSpeaker}
                 variant={isSpeakerOn ? "default" : "secondary"}
                 size="lg"
-                className="w-14 h-14 rounded-full"
+                className="w-10 h-10 sm:w-14 sm:h-14 rounded-full p-0"
               >
                 {isSpeakerOn ? (
-                  <Volume2 className="w-6 h-6" />
+                  <Volume2 className="w-5 h-5 sm:w-6 sm:h-6" />
                 ) : (
-                  <VolumeX className="w-6 h-6" />
+                  <VolumeX className="w-5 h-5 sm:w-6 sm:h-6" />
                 )}
               </Button>
             </div>
@@ -410,7 +441,7 @@ const Call = () => {
           {callStatus === "connected" && !isVideoCall && (
             <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900">
               <div className="text-center text-white">
-                <Avatar className="w-32 h-32 mx-auto mb-4 ring-4 ring-white/20">
+                <Avatar className="w-24 h-24 sm:w-32 sm:h-32 mx-auto mb-4 ring-4 ring-white/20">
                   <AvatarImage src={targetUser.avatar} />
                   <AvatarFallback className="text-2xl bg-gradient-to-r from-indigo-500 to-purple-500">
                     {targetUser.username[0].toUpperCase()}
@@ -437,7 +468,7 @@ const Call = () => {
 
             {/* User Avatar */}
             <div className="mb-6">
-              <Avatar className="w-32 h-32 mx-auto mb-4 ring-4 ring-white/20">
+              <Avatar className="w-24 h-24 sm:w-32 sm:h-32 mx-auto mb-4 ring-4 ring-white/20">
                 <AvatarImage src={targetUser.avatar} />
                 <AvatarFallback className="text-2xl bg-gradient-to-r from-indigo-500 to-purple-500">
                   {targetUser.username[0].toUpperCase()}
@@ -454,29 +485,29 @@ const Call = () => {
             </div>
 
             {/* Call Controls */}
-            <div className="flex justify-center space-x-6 mb-6">
+            <div className="flex justify-center space-x-4 sm:space-x-6 mb-6">
               {/* Mute Button */}
               <Button
                 onClick={toggleMute}
                 variant={isMuted ? "destructive" : "secondary"}
                 size="lg"
-                className="w-14 h-14 rounded-full"
+                className="w-12 h-12 sm:w-14 sm:h-14 rounded-full p-0"
               >
                 {isMuted ? (
-                  <MicOff className="w-6 h-6" />
+                  <MicOff className="w-5 h-5 sm:w-6 sm:h-6" />
                 ) : (
-                  <Mic className="w-6 h-6" />
+                  <Mic className="w-5 h-5 sm:w-6 sm:h-6" />
                 )}
               </Button>
 
               {/* End Call Button */}
               <Button
-                onClick={endCall}
+                onClick={() => endCall()}
                 variant="destructive"
                 size="lg"
-                className="w-16 h-16 rounded-full bg-red-500 hover:bg-red-600"
+                className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-red-500 hover:bg-red-600 p-0"
               >
-                <PhoneOff className="w-8 h-8" />
+                <PhoneOff className="w-6 h-6 sm:w-8 sm:h-8" />
               </Button>
 
               {/* Speaker Button */}
@@ -484,12 +515,12 @@ const Call = () => {
                 onClick={toggleSpeaker}
                 variant={isSpeakerOn ? "default" : "secondary"}
                 size="lg"
-                className="w-14 h-14 rounded-full"
+                className="w-12 h-12 sm:w-14 sm:h-14 rounded-full p-0"
               >
                 {isSpeakerOn ? (
-                  <Volume2 className="w-6 h-6" />
+                  <Volume2 className="w-5 h-5 sm:w-6 sm:h-6" />
                 ) : (
-                  <VolumeX className="w-6 h-6" />
+                  <VolumeX className="w-5 h-5 sm:w-6 sm:h-6" />
                 )}
               </Button>
             </div>

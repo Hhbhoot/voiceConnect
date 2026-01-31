@@ -194,16 +194,16 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
           {!selectedFile ? (
             // File selection area
             <div
-              className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors cursor-pointer"
+              className="border-2 border-dashed border-gray-300 rounded-lg p-4 sm:p-6 text-center hover:border-gray-400 transition-colors cursor-pointer"
               onDragOver={handleDragOver}
               onDrop={handleDrop}
               onClick={() => fileInputRef.current?.click()}
             >
-              <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-lg font-medium text-gray-900 mb-2">
+              <Upload className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-base sm:text-lg font-medium text-gray-900 mb-2">
                 Choose an image or drag it here
               </p>
-              <p className="text-sm text-gray-500 mb-4">
+              <p className="text-xs sm:text-sm text-gray-500 mb-4">
                 Supports: JPG, PNG, GIF, WebP (max 5MB)
               </p>
               <Button variant="outline" type="button">

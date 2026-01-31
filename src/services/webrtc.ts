@@ -37,7 +37,7 @@ export class WebRTCService {
       this.isVideoCall = !audioOnly;
       this.localStream = await navigator.mediaDevices.getUserMedia({
         audio: true,
-        video: !audioOnly
+        video: audioOnly
           ? false
           : {
               width: { min: 640, ideal: 1280, max: 1920 },

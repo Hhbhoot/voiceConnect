@@ -115,7 +115,7 @@ const ChatImage: React.FC<ChatImageProps> = ({
 
   return (
     <>
-      <div className="max-w-xs lg:max-w-md">
+      <div className="w-full max-w-[240px] sm:max-w-xs lg:max-w-md">
         {/* Image Container */}
         <div className="relative group">
           {isLoading && (

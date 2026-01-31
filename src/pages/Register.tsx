@@ -144,17 +144,19 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center p-4 sm:p-6 lg:p-8">
+      <div className="w-full max-w-md space-y-8">
         {/* Logo/Brand Section */}
-        <div className="text-center mb-8">
-          <div className="mx-auto w-16 h-16 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center mb-4">
-            <UserPlus className="w-8 h-8 text-white" />
+        <div className="text-center">
+          <div className="mx-auto w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center mb-4">
+            <UserPlus className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
             Join VoiceConnect
           </h1>
-          <p className="text-gray-600">Create your account to get started</p>
+          <p className="text-sm sm:text-base text-gray-600">
+            Create your account to get started
+          </p>
         </div>
 
         {/* Register Form */}
@@ -178,7 +180,7 @@ const Register = () => {
                   placeholder="Choose a unique username"
                   value={formData.username}
                   onChange={(e) => handleChange("username", e.target.value)}
-                  className="h-12 text-base"
+                  className="h-10 sm:h-12 text-base"
                   required
                 />
               </div>
@@ -192,7 +194,7 @@ const Register = () => {
                   placeholder="Enter your email"
                   value={formData.email}
                   onChange={(e) => handleChange("email", e.target.value)}
-                  className="h-12 text-base"
+                  className="h-10 sm:h-12 text-base"
                   required
                 />
               </div>
@@ -207,7 +209,7 @@ const Register = () => {
                     placeholder="Create a strong password"
                     value={formData.password}
                     onChange={(e) => handleChange("password", e.target.value)}
-                    className="h-12 text-base pr-10"
+                    className="h-10 sm:h-12 text-base pr-10"
                     required
                   />
                   <Button
@@ -238,7 +240,7 @@ const Register = () => {
                     onChange={(e) =>
                       handleChange("confirmPassword", e.target.value)
                     }
-                    className="h-12 text-base pr-10"
+                    className="h-10 sm:h-12 text-base pr-10"
                     required
                   />
                   <Button
@@ -263,7 +265,7 @@ const Register = () => {
                 <Select
                   onValueChange={(value) => handleChange("gender", value)}
                 >
-                  <SelectTrigger className="h-12 text-base">
+                  <SelectTrigger className="h-10 sm:h-12 text-base">
                     <SelectValue placeholder="Select your gender" />
                   </SelectTrigger>
                   <SelectContent>
@@ -279,7 +281,7 @@ const Register = () => {
 
               <Button
                 type="submit"
-                className="w-full h-12 text-base bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+                className="w-full h-10 sm:h-12 text-base bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 transition-all duration-200"
                 disabled={isLoading}
               >
                 {isLoading ? "Creating Account..." : "Create Account"}

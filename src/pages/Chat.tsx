@@ -533,8 +533,8 @@ const Chat = () => {
                 disabled={!isOnline || !isConnected}
                 title="Start video call"
               >
-                <Video className="w-4 h-4 mr-2" />
-                Video
+                <Video className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Video</span>
               </Button>
               <Button
                 variant="outline"
@@ -543,8 +543,8 @@ const Chat = () => {
                 disabled={!isOnline || !isConnected}
                 title="Start voice call"
               >
-                <Phone className="w-4 h-4 mr-2" />
-                Call
+                <Phone className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Call</span>
               </Button>
               <Button variant="ghost" size="sm">
                 <MoreVertical className="w-4 h-4" />
@@ -555,10 +555,10 @@ const Chat = () => {
       </div>
 
       {/* Chat Messages */}
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm h-[600px] flex flex-col">
+      <div className="max-w-4xl mx-auto px-2 sm:px-4 py-3 sm:py-6 h-[calc(100vh-80px)]">
+        <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm h-full flex flex-col">
           <CardContent className="flex-1 p-0 overflow-hidden">
-            <ScrollArea className="h-full p-4">
+            <ScrollArea className="h-full p-2 sm:p-4">
               {isLoadingHistory ? (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center">
@@ -627,7 +627,7 @@ const Chat = () => {
                         ) : (
                           // Text Message
                           <div
-                            className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                            className={`max-w-[85%] sm:max-w-md px-4 py-2 rounded-lg ${
                               message.senderId === currentUser?.id
                                 ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white"
                                 : "bg-gray-100 text-gray-900"
